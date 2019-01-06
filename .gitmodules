@@ -1,0 +1,6 @@
+[submodule "zsh/powerlevel9k"]
+	path = zsh/powerlevel9k
+	url = https://github.com/bhilburn/powerlevel9k.git
+[submodule "zsh/fast-syntax-highlighting"]
+	path = zsh/fast-syntax-highlighting
+	url = https://github.com/zdharma/fast-syntax-highlighting.git
