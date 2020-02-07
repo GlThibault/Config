@@ -1,3 +1,19 @@
+# **************************************************************************** #
+#                                                                              #
+#                    ::::::::::  ::::::::  :::::::::  ::::::::::               #
+#                   :+:        :+:    :+: :+:    :+: :+:    :+:                #
+#                  +:+              +:+  +:+    +:+ +:+                        #
+#                 +#++:++#       +#+    +#++:++#:  +#++:++#+                   #
+#                +#+          +#+      +#+    +#+        +#+                   #
+#               #+#         #+#       #+#    #+# #+#    #+#                    #
+#              ########## ########## ###    ###  ########                      #
+#                                                                              #
+#                 .zshrc                                                       #
+#                                                                              #
+#                 By: tglandai <thibault.glandais@gmail.com>                   #
+#                                                                              #
+# **************************************************************************** #
+
 #prompt config
 export CLICOLOR=1
 export LSCOLORS=gxBxhxDxfxhxhxhxhxcxcx
@@ -14,17 +30,43 @@ setopt auto_cd
 setopt NO_BEEP
 
 
+case $TERM in
+    xterm*)
+        # If this is an xterm set the title to user@host:dir
+        # precmd () {print -Pn "\e]0;%n@%m: %~\a"}
+        
+        # If this is an xterm set the title to dir
+        precmd () {print -Pn "\e]0;%~\a"}
+        ;;
+esac
+
+# enable color support of ls and also add handy aliases
+if [ -x /usr/bin/dircolors ]; then
+    test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
+    alias ls='ls --color=auto'
+    alias dir='dir --color=auto'
+    alias vdir='vdir --color=auto'
+
+    alias grep='grep --color=auto'
+    alias fgrep='fgrep --color=auto'
+    alias egrep='egrep --color=auto'
+fi
+
+export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
+
 #alias
-alias norm='norminette'
-alias gccf='gcc -Wall -Werror -Wextra'
 alias l='ls'
 alias ll='ls -lh'
 alias la='ls -lha'
+
 alias gst='git status'
 alias gco='git checkout'
+alias gce='git checkout'
 alias gci='git commit'
 alias grb='git rebase'
 alias gbr='git branch'
+alias gbrclean='git branch | grep -v "master" | xargs git branch -D'
+alias gmergeclean='git branch --merged | egrep -v "(^\*|master|dev)" | xargs git branch -d'
 alias gpl='git pull'
 alias gpu='git push'
 alias gad='git add -A'
@@ -33,19 +75,25 @@ alias gme='git merge'
 alias gdf='git diff'
 alias gc='git clone'
 alias gre='git clone --recursive'
-alias gbr="git branch | grep -v "master" | xargs git branch -D"
+alias gl='git log'
+
 alias v='vim'
-alias vc='vim -c "Stdheader"'
 alias zr='source ~/.zshrc'
 alias ...='cd ../..'
 alias ....='cd ../../..'
-alias o='open'
-alias lock='/System/Library/CoreServices/Menu\ Extras/user.menu/Contents/Resources/CGSession -suspend'
-alias firefox='open "/sgoinfre/goinfre/Perso/tglandai/Firefox Nightly.app"'
-alias cleanlib='rm -rf ~/Library/*.42_cache_bak*'
-alias cc++='clang++ -Wall -Wextra -Werror'
-alias cc++98='clang++ -Wall -Wextra -Werror -std=c++98'
-alias cpconf='cleanlib ; cp -R ~/Config/Firefox/Profiles/tglandai.default ~/Library/Application\ Support/Firefox/Profiles &; cp ~/Config/Firefox/profiles.ini ~/Library/Application\ Support/Firefox/profiles.ini &; cp -R ~/Config/Code/User ~/Library/Application\ Support/Code/'
+alias o='xdg-open'
+alias open='xdg-open'
+alias dockerenv='eval $(docker-machine env)'
+alias odsync='onedrive --synchronize'
+alias npxw='npx webpack --mode=development'
+alias gsubupdate='git submodule update --remote --merge'
+alias gitinspector='python3 ~/gitinspector/gitinspector.py'
+alias javaversion="sudo update-alternatives --config java"
+alias ngroka='ngrok http 8080 -region=ap'
+alias yarn='~/.yarn/bin/yarn'
+
+alias idy='cd ~/dirox/idareyou/backoffice/'
+alias game='cd ~/dirox/gogame/goplay-app/'
 
 #key bindings
 bindkey	"^[[3~"		delete-char
@@ -66,44 +114,25 @@ source ~/Config/zsh/powerlevel9k/powerlevel9k.zsh-theme
 
 #powerlevel9k config
 POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(dir rbenv vcs)
-POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=(status time context)
+POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=(status)
 POWERLEVEL9K_TIME_FORMAT="%D{%H:%M}"
-prompt_context() {
-    print -n "%F{cyan}\uE0B2%K{cyan}%F{black} %m "
-}
+# POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=(status context)
+# prompt_context() {
+#     print -n "%F{cyan}\uE0B2%K{cyan}%F{black} %n@`hostname -f`"
+# }
 
+source ~/Config/zsh/private
 
-#open visual studio code
-if [ -e "/sgoinfre/goinfre/Perso/tglandai/Visual Studio Code.app" ]; then
-    code() {
-        open -a /sgoinfre/goinfre/Perso/tglandai/Visual\ Studio\ Code.app $1
-    }
-fi
+#transfer.sh
+transfer() { if [ $# -eq 0 ]; then echo -e "No arguments specified. Usage:\necho transfer /tmp/test.md\ncat /tmp/test.md | transfer test.md"; return 1; fi
+tmpfile=$( mktemp -t transferXXX ); if tty -s; then basefile=$(basename "$1" | sed -e 's/[^a-zA-Z0-9._-]/-/g'); curl --progress-bar --upload-file "$1" "https://transfer.sh/$basefile" >> $tmpfile; else curl --progress-bar --upload-file "-" "https://transfer.sh/$1" >> $tmpfile ; fi; cat $tmpfile; rm -f $tmpfile; }
 
+export ANDROID_HOME="$HOME/Android/Sdk/"
 
-#42 school
-if [ $HOME = "/Users/tglandai" ]; then
+export JAVA_HOME=$(update-alternatives --query javac | sed -n -e 's/Best: *\(.*\)\/bin\/javac/\1/p')
 
-    #brew path
-    PATH=$HOME/.brew/bin:$PATH
-
-    #export user
-    USER=`/usr/bin/whoami`
-    export USER
-    GROUP=`/usr/bin/id -gn $USER`
-    export GROUP
-    MAIL="$USER@student.42.fr"
-    export MAIL
-
-    osascript -e 'tell application "Finder" to set desktop picture to POSIX file "/Users/tglandai/Config/background.jpg"'
-fi
-
-
-#show all ip
-function myip() {
-    ifconfig lo0 | grep 'inet ' | sed -e 's/:/ /' | awk '{print "lo0       : " $2}'
-	ifconfig en0 | grep 'inet ' | sed -e 's/:/ /' | awk '{print "en0 (IPv4): " $2 " " $3 " " $4 " " $5 " " $6}'
-	ifconfig en0 | grep 'inet6 ' | sed -e 's/ / /' | awk '{print "en0 (IPv6): " $2 " " $3 " " $4 " " $5 " " $6}'
-	ifconfig en1 | grep 'inet ' | sed -e 's/:/ /' | awk '{print "en1 (IPv4): " $2 " " $3 " " $4 " " $5 " " $6}'
-	ifconfig en1 | grep 'inet6 ' | sed -e 's/ / /' | awk '{print "en1 (IPv6): " $2 " " $3 " " $4 " " $5 " " $6}'
-}
+export PATH="${PATH}:${ANDROID_HOME}tools/:${ANDROID_HOME}platform-tools"
+export PATH="$PATH:$HOME/Android/android-studio/bin"
+export PATH="${PATH}:$HOME/.symfony/bin"
+export PATH="$PATH:$(yarn global bin)"
+export PATH="$PATH:$HOME/Apps/flutter/bin"

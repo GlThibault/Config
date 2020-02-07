@@ -1,5 +1,6 @@
 set runtimepath=~/Config/vim,$VIMRUNTIME
 syntax on
+set background=dark
 set number
 colorscheme jay  
 set mouse=a
