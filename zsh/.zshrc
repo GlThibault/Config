@@ -121,7 +121,7 @@ POWERLEVEL9K_TIME_FORMAT="%D{%H:%M}"
 #     print -n "%F{cyan}\uE0B2%K{cyan}%F{black} %n@`hostname -f`"
 # }
 
-source ~/Config/zsh/private
+# source ~/Config/zsh/private
 
 #transfer.sh
 transfer() { if [ $# -eq 0 ]; then echo -e "No arguments specified. Usage:\necho transfer /tmp/test.md\ncat /tmp/test.md | transfer test.md"; return 1; fi
