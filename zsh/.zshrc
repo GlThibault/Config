@@ -34,7 +34,7 @@ case $TERM in
     xterm*)
         # If this is an xterm set the title to user@host:dir
         # precmd () {print -Pn "\e]0;%n@%m: %~\a"}
-        
+
         # If this is an xterm set the title to dir
         precmd () {print -Pn "\e]0;%~\a"}
         ;;
@@ -76,6 +76,7 @@ alias gdf='git diff'
 alias gc='git clone'
 alias gre='git clone --recursive'
 alias gl='git log'
+alias gignorefolder='git ls-files -z | xargs -0 git update-index --assume-unchanged'
 
 alias v='vim'
 alias zr='source ~/.zshrc'
@@ -90,10 +91,9 @@ alias gsubupdate='git submodule update --remote --merge'
 alias gitinspector='python3 ~/gitinspector/gitinspector.py'
 alias javaversion="sudo update-alternatives --config java"
 alias ngroka='ngrok http 8080 -region=ap'
-alias yarn='~/.yarn/bin/yarn'
 
-alias idy='cd ~/dirox/idareyou/backoffice/'
-alias game='cd ~/dirox/gogame/goplay-app/'
+alias speedtest-cli='curl -s https://raw.githubusercontent.com/sivel/speedtest-cli/master/speedtest.py | python -'
+alias compress-picture='mogrify -strip -interlace Plane -gaussian-blur 0.05 -quality 85% *.PATH'
 
 #key bindings
 bindkey	"^[[3~"		delete-char
@@ -121,18 +121,39 @@ POWERLEVEL9K_TIME_FORMAT="%D{%H:%M}"
 #     print -n "%F{cyan}\uE0B2%K{cyan}%F{black} %n@`hostname -f`"
 # }
 
-# source ~/Config/zsh/private
+source ~/Config/zsh/private.sh
 
 #transfer.sh
-transfer() { if [ $# -eq 0 ]; then echo -e "No arguments specified. Usage:\necho transfer /tmp/test.md\ncat /tmp/test.md | transfer test.md"; return 1; fi
-tmpfile=$( mktemp -t transferXXX ); if tty -s; then basefile=$(basename "$1" | sed -e 's/[^a-zA-Z0-9._-]/-/g'); curl --progress-bar --upload-file "$1" "https://transfer.sh/$basefile" >> $tmpfile; else curl --progress-bar --upload-file "-" "https://transfer.sh/$1" >> $tmpfile ; fi; cat $tmpfile; rm -f $tmpfile; }
+transfer(){ if [ $# -eq 0 ];then echo "No arguments specified.\nUsage:\n  transfer <file|directory>\n  ... | transfer <file_name>">&2;return 1;fi;if tty -s;then file="$1";file_name=$(basename "$file");if [ ! -e "$file" ];then echo "$file: No such file or directory">&2;return 1;fi;if [ -d "$file" ];then file_name="$file_name.zip" ,;(cd "$file"&&zip -r -q - .)|curl --progress-bar --upload-file "-" "https://transfersh.com/$file_name"|tee /dev/null,;else cat "$file"|curl --progress-bar --upload-file "-" "https://transfersh.com/$file_name"|tee /dev/null;fi;else file_name=$1;curl --progress-bar --upload-file "-" "https://transfersh.com/$file_name"|tee /dev/null;fi;}
 
 export ANDROID_HOME="$HOME/Android/Sdk/"
 
-export JAVA_HOME=$(update-alternatives --query javac | sed -n -e 's/Best: *\(.*\)\/bin\/javac/\1/p')
+# export JAVA_HOME=$(update-alternatives --query javac | sed -n -e 's/Best: *\(.*\)\/bin\/javac/\1/p')
 
 export PATH="${PATH}:${ANDROID_HOME}tools/:${ANDROID_HOME}platform-tools"
 export PATH="$PATH:$HOME/Android/android-studio/bin"
 export PATH="${PATH}:$HOME/.symfony/bin"
-export PATH="$PATH:$(yarn global bin)"
 export PATH="$PATH:$HOME/Apps/flutter/bin"
+export PATH="$PATH:`yarn global bin`"
+export PATH="$PATH:/usr/local/go/bin"
+export PATH="$PATH:/home/thibault/.config/composer/vendor/bin"
+
+extract() {
+    date=`date +%Y-%m-%d`
+    if [ -n "$1" ]
+    then
+        commitId=$1
+    else
+        commitId=`git log --format="%H" -n 1`
+    fi
+    git diff-tree -r --no-commit-id --name-only --diff-filter=ACMRT $commitId | xargs tar -rf $date.tar
+}
+
+if [[ $TILIX_ID ]]; then
+        source /etc/profile.d/vte.sh
+fi
+
+export GPG_TTY=$(tty)
+gpgconf --launch gpg-agent
+
+source <(cod init $$ zsh)
